@@ -1,40 +1,30 @@
 #!/bin/bash
 tag=mkardaris2016/penaviation-core:0.6.1 
-
-# docker internal paths
-
-SplitterPathExe="./mavlink-splitter/build/src/mavlink-routerd -c mavlink-splitter/examples/isbd.conf" 
-SplitterPathConf="/mavlink-splitter/examples/isbd.conf"
-
-NavlinkPathExe="/navlink/navlink.py"
-
 dataPath=/data
 
 
-# Build image if it doesn't exist
+# Pull image if it doesn't exist
 if [ -z "$(docker images -q ${tag})" ]
 then
-   echo "Docker image not available. Building with tag '${tag}'"
+#  echo "Docker image not available. Building with tag '${tag}'"
+#  sudo  docker build  -t $tag -f ./Dockerfile --memory='1g' .
    sudo mkdir /data
    sudo cp isbd.conf /data
    sudo cp navrouter.conf /data
-#  sudo  docker build  -t $tag -f ./Dockerfile.ros_fint --memory='1g' .
    sudo login --username=mkardaris2016 -p 
-   sudo pull mkardaris2016/penaviation-core:0.6.1
+   echo "Docker image is not available in this host. Pull it from docker Hub with tag: '${tag}'"  
+   sudo pull $(tag)
 fi
  
-# Run image container 
-#    -v src/dji_osdk_mk/UserConfig.txt:/opt/OnBoard-SDK/build/bin/UserConfig.txt \
 
-#  --mount type=bind,source=$(pwd)/${dataPath}/logs,target=/logs \
-
+# Iridium SBD
 sudo chmod  +666 /dev/ttyUSB0
+# AutoPilot connected via USB
 sudo chmod  +666 /dev/ttyACM0
-#xhost +local:*
-# bash -it -c "roslaunch lavrio_pilot.launch"
-#   -v $(pwd)/data/isbd.conf:/mavlink-splitter/examples/isbd.conf:rw \
-#    -v $(pwd)/data/navrouter.conf:/navlink/navrouter.conf:rw \
+# AutoPilot connected via serial line
+sudo chmod  +666 /dev/ttyS0
 
+# Run image container 
 sudo docker run -it --rm --privileged -p 5770:5770/tcp -p 14500:14500/udp -p 14600:14600/udp \
     -e DISPLAY=$DISPLAY \
     --device=/dev/ttyUSB0:/dev/ttyUSB0 \
